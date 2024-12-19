@@ -152,7 +152,7 @@ def plot_vehicle_count_per_timestep(morning=True):
     print(f"Average number of vehicles during experiment time: {avg_vehicles}")
     print(f"Maximum number of vehicles during experiment time: {max_vehicles}")
 
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(5, 3))
     plt.plot(times, counts, linestyle='-')
     plt.xlabel('')
     plt.ylabel('Number of Vehicles')
@@ -164,12 +164,12 @@ def plot_vehicle_count_per_timestep(morning=True):
     # plt.axvline(x=datetime.strptime("07:15:00", "%H:%M:%S"), color='red', linestyle='--')
     # plt.axvline(x=datetime.strptime("08:45:00", "%H:%M:%S"), color='red', linestyle='--')
 
-    # Add shaded region from 7:15 AM to 8:45 AM
-    plt.axvspan(experiment_start, experiment_end, color='red', alpha=0.25)
-
     # Add horizontal lines for average and maximum number of vehicles
-    plt.axhline(y=avg_vehicles, color='blue', linestyle='--', label=f'Average: {avg_vehicles:.2f}')
-    plt.axhline(y=max_vehicles, color='green', linestyle='--', label=f'Maximum: {max_vehicles}')
+    plt.axhline(y=avg_vehicles, color='blue', linestyle='--', label=f'Average')
+    # plt.axhline(y=max_vehicles, color='green', linestyle='--', label=f'Maximum: {max_vehicles}')
+
+    # Add shaded region from 7:15 AM to 8:45 AM
+    plt.axvspan(experiment_start, experiment_end, color='red', alpha=0.25, label='Experiment')
 
     plt.legend(loc='upper right')
 
@@ -186,7 +186,7 @@ def plot_vehicle_count_per_timestep(morning=True):
 
 def plot_vehicle_count_per_timestep_full():
     plot_vehicle_count_per_timestep(morning=True)
-    plot_vehicle_count_per_timestep(morning=False)
+    # plot_vehicle_count_per_timestep(morning=False)
 
 
 def plot_vehicle_positions_heatmap(morning=True):
@@ -248,8 +248,8 @@ def main():
     # trace = np.load('trace.npy', allow_pickle=True).item()
 
     plot_vehicle_count_per_timestep_full()
-    plot_vehicle_positions_heatmap(True)
-    plot_vehicle_positions_heatmap(False)
+    # plot_vehicle_positions_heatmap(True)
+    # plot_vehicle_positions_heatmap(False)
 
 
 if __name__ == "__main__":
