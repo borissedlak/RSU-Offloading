@@ -3,8 +3,8 @@ import unittest
 
 from mesa import Model
 
-from poc.strategies import StaticVehicleLoadGenerator, ARHCStrategy, is_moving_towards
-from poc.model import VehicleAgent, VECStationAgent, VECModel
+from strategies import StaticVehicleLoadGenerator, ARHCStrategy, is_moving_towards
+from model import VehicleAgent, VECStationAgent, VECModel
 
 
 class TestIsMovingTowards(unittest.TestCase):

@@ -4,7 +4,7 @@ import solara
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle, Circle, FancyArrow
 
-from poc.model import VehicleAgent, VECStationAgent, VECModel
+from model import VehicleAgent, VECStationAgent, VECModel
 
 
 def render_model_with_bg(background):

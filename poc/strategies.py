@@ -2,13 +2,13 @@ import itertools
 import logging
 import math
 from collections import defaultdict, deque
-
 import numpy as np
 
-from poc import units as units
-from poc.base import distance
-from poc.model import VehicleLoadGenerator, VehicleAgent, RSAgentStrategy, VECStationAgent, VECModel
+import units as units
+from base import distance
+from model import VehicleLoadGenerator, VehicleAgent, RSAgentStrategy, VECStationAgent, VECModel
 
+from td3_torch import Agent as TD3Agent
 
 class StaticVehicleLoadGenerator(VehicleLoadGenerator):
     """
@@ -221,6 +221,9 @@ class EarliestPossibleHandoverStrategy(RSAgentStrategy):
                                  and distance(x.pos, vehicle.pos) <= x.range
                                  and is_moving_towards(vehicle.pos, vehicle.angle, x.pos)]
 
+            #print(f"Station: {station}")
+            #print(f"Station Neigbhors: {station.neighbors}")
+
             if not in_range_stations:
                 if station.is_vehicle_in_range(vehicle):
                     continue
@@ -248,6 +251,142 @@ class EarliestPossibleHandoverStrategy(RSAgentStrategy):
                     or not [s for s in model.vec_stations if s.is_vehicle_in_range(vehicle)]), \
                 f"Vehicle {vehicle.unique_id} is out of range"
 
+
+class RLHandoverStrategy(RSAgentStrategy):
+    """
+    This strategy implements the TD3 algorithm.
+    """
+
+    def __init__(self, input_dimension=8):
+        self.agents = defaultdict(TD3Agent)
+        self.score_history = defaultdict(list)
+        self.score = defaultdict(int)
+        self.last_vehicles_ids = defaultdict(list)
+        self.last_actions = defaultdict(list)
+        self.last_observations = defaultdict(list)
+        self.step_counter = 0
+        self.input_dimension = input_dimension
+
+    def handle_offloading(self, station: VECStationAgent):
+        # We know that all vehicles move before the RSU handover phase
+        # Therefore, we only need to check if some vehicles are out of the range of the RSU
+        # If so, perform handover to the nearest other RSU
+
+
+        current_station = station.unique_id
+
+        if current_station not in self.agents:
+            self.agents[current_station] = TD3Agent(alpha=0.001, beta=0.001,
+                     input_dims=(self.input_dimension,),
+                     # This number depends on the number of neighbors that each RSU has, plus the vehicle trajectory. This demonstrates the limitations of RL approaches
+                     tau=0.005, low_action_value=0, high_action_value=1,
+                     batch_size=100, layer1_size=400, layer2_size=300,
+                     n_actions=1)
+
+
+
+        last_vehicles_ids = []
+        last_actions = []
+        last_observations = []
+        for vehicle in list(station.vehicles):
+            last_vehicles_ids.append(vehicle.unique_id)
+            vehicle_trajectory_suitability = [calculate_trajectory_suitability(neighbor_station, vehicle) for neighbor_station
+                                              in station.neighbors]
+
+
+            neigbhors_available_capacity = [
+                station.get_neighbor_load(neighbor_station.unique_id) / neighbor_station.capacity for neighbor_station
+                in station.neighbors]
+            observation = neigbhors_available_capacity + [station.load] + vehicle_trajectory_suitability + [calculate_trajectory_suitability(station, vehicle)]
+            last_observations.append(observation)
+            #print("Observation: ", observation)
+
+            action_continuous = self.agents[current_station].choose_action(observation)
+            action_discrete = self.discretize_action(action_continuous)
+            if action_discrete < len(station.neighbors):
+                station.perform_handover(station.neighbors[action_discrete], vehicle)
+            last_actions.append(action_discrete)
+
+        self.last_vehicles_ids[current_station] = last_vehicles_ids
+        self.last_actions[current_station] = last_actions
+        self.last_observations[current_station] = last_observations
+
+
+
+            # reward = self.compute_reward()
+            # self.score += reward
+            # self.score_history.append(self.score)
+
+
+
+
+
+    def discretize_action(self, action):
+        if action <= 0.25:
+            return 0 # Offload to first neigbhor
+        elif action <= 0.5:
+            return 1 # Offload to second neigbhor
+        elif action <= 0.75:
+            return 2 # Offload to first neigbhor
+        elif action <= 1:
+            return 3 # Don't offload
+
+
+
+    def after_step(self, model: "VECModel"):
+        #new_vehicle_trajectory_suitability = np.zeros(len(self.last_vehicles_ids))
+
+        for station_id in self.agents.keys():
+
+            target_station = None
+            for station in list(model.schedule.get_agents_by_type(VECStationAgent)):
+                if station.unique_id == station_id:
+                    target_station = station
+                    break
+            vehicles_updated = []
+            for old_vehicle_id in self.last_vehicles_ids[station_id]:
+                for vehicle in list(model.schedule.get_agents_by_type(VehicleAgent)):
+                    if old_vehicle_id == vehicle.unique_id:
+                        vehicles_updated.append(vehicle)
+
+
+            #print("Vehicles updated: ", vehicles_updated)
+
+            for i, vehicle in enumerate(vehicles_updated):
+                vehicle_trajectory_suitability = [calculate_trajectory_suitability(neighbor_station, vehicle) for
+                                                      neighbor_station
+                                                      in target_station.neighbors]
+
+                neigbhors_available_capacity = [
+                    target_station.get_neighbor_load(neighbor_station.unique_id) / neighbor_station.capacity for neighbor_station
+                    in target_station.neighbors]
+
+                observation_ = neigbhors_available_capacity + [target_station.load] + vehicle_trajectory_suitability + [
+                    calculate_trajectory_suitability(target_station, vehicle)]
+
+                qos_avg = model.report_avg_qos()
+                if qos_avg < 0.6:
+                    reward = -1
+                else:
+                    reward = 1
+
+                self.agents[station_id].remember(self.last_observations[station_id][i], self.last_actions[station_id][i], reward, observation_, False)
+                self.agents[station_id].learn()
+                self.score[station_id] += reward
+                self.score_history[station_id].append(self.score)
+
+        self.step_counter += 1
+        perc_done = (self.step_counter / 5402) * 100
+        print(f"% Done {perc_done}")
+
+
+
+
+
+
+
+
+        # The state space should include the active vehicles and all the other stations (suppose
 
 class DynamicVehicleLoadGenerator(VehicleLoadGenerator):
     """
@@ -335,4 +474,5 @@ STRATEGIES_DICT = {
     "nearest": NearestRSUStrategy,
     "earliest": EarliestPossibleHandoverStrategy,
     "latest": LatestPossibleHandoverStrategy,
+    "rl": RLHandoverStrategy,
 }

@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 
 from matplotlib import pyplot as plt
 
-from poc.data_test import MIN_X, MAX_X, MIN_Y, MAX_Y
+from data_test import MIN_X, MAX_X, MIN_Y, MAX_Y
 
 import numpy as np
 import pandas as pd
@@ -203,7 +203,7 @@ def plot_vehicle_positions_heatmap(morning=True):
     for (x, y), count in grid_position.items():
         vehicle_count_grid[y, x] = count
 
-    title = f"Vehicle Density Heatmap at Créteil Roundabout ({'Morning' if morning else "Evening"} Trace)"
+    title = f"Vehicle Density Heatmap at Créteil Roundabout ({'Morning' if morning else 'Evening'} Trace)"
     label = "Cumulative Vehicle Count"
 
     reduction_factor = 4
@@ -235,8 +235,8 @@ def plot_vehicle_positions_heatmap(morning=True):
     ax.set_aspect('equal')
     plt.tight_layout()
 
-    filename = f"creteil_heatmap_{'morning' if morning else 'evening'}.png"
-    plt.savefig(filename, format="png", dpi=200)
+    filename = f"creteil_heatmap_{'morning' if morning else 'evening'}.pdf"
+    plt.savefig(filename, format="pdf")
     plt.show()
 
 
@@ -247,8 +247,8 @@ def main():
 
     # trace = np.load('trace.npy', allow_pickle=True).item()
 
-    plot_vehicle_count_per_timestep_full()
-    # plot_vehicle_positions_heatmap(True)
+    # plot_vehicle_count_per_timestep_full()
+    plot_vehicle_positions_heatmap(True)
     # plot_vehicle_positions_heatmap(False)
 
 

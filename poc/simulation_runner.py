@@ -8,10 +8,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 
-from poc.model import VehicleAgent, VECModel, compute_vehicle_qos
-from poc.render import VEC_STATION_COLORS
-from poc.scenarios import SIMULATION_CONFIGS
-from poc.strategies import DynamicVehicleLoadGenerator, STRATEGIES_DICT
+from model import VehicleAgent, VECModel, compute_vehicle_qos
+from render import VEC_STATION_COLORS
+from scenarios import SIMULATION_CONFIGS
+from strategies import DynamicVehicleLoadGenerator, STRATEGIES_DICT
 
 SEED = 42
 
@@ -61,8 +61,10 @@ def run_model(params, max_steps=None):
 
     scenario, rsu_config_name, model_name, strategy_key, load_update_interval, seed, _, strategy_config = params
     strategy_class = STRATEGIES_DICT[strategy_key]
-
+    print(strategy_key)
     if strategy_key == 'default':
+        strategy = strategy_class(**strategy_config)
+    elif strategy_key == 'rl':
         strategy = strategy_class(**strategy_config)
     else:
         strategy = strategy_class()
@@ -74,12 +76,16 @@ def run_model(params, max_steps=None):
                      load_update_interval=load_update_interval, seed=seed)
     step = 0
     while model.running and (max_steps is None or step <= max_steps):
+        start_time = time.monotonic()
+        # something
         model.step()
+        print(f"Run time {time.monotonic() - start_time} seconds")
+
         step += 1
 
     filename = f"../results/runs/result_{scenario}_{rsu_config_name}_{model_name.lower()}"
     model.datacollector.get_model_vars_dataframe().to_csv(f"{filename}_model_vars.csv")
-    # model.datacollector.get_agent_vars_dataframe().to_csv(f"{filename}_agent_vars.csv")
+    model.datacollector.get_agent_vars_dataframe().to_csv(f"{filename}_agent_vars.csv")
 
     return params, extract_model_metrics(model, model_name)
 
@@ -123,7 +129,7 @@ def generate_arhc_strategy_configs(scenario, rsu_config):
 BEST_ARHC_CONFIG = {
     'overload_threshold': 0.7,
     'leaving_threshold': 0,
-    'alt_ho_hysteresis': 0.05,
+    'lb_util_hysteresis': 0.05,
     'alt_suitability_min': 0.3,
 }
 
@@ -220,6 +226,7 @@ def run_benchmarks(scenario, rsu_config):
         (scenario, rsu_config, "NearestRSU", "nearest", 1, SEED, 1388, None),
         (scenario, rsu_config, "EarliestHO", "earliest", 1, SEED, 1540, None),
         (scenario, rsu_config, "LatestHO", "latest", 1, SEED, 1264, None),
+        (scenario, rsu_config, "RLTD3", "rl", 1, SEED, None , {'input_dimension': 8})
     ]
 
     i = 0
@@ -346,8 +353,8 @@ def plot_qos_grid(trace, rsu_config_name, filename='qos_grid.npy', min=True):
     heatmap = ax.imshow(reduced_grid, cmap=cmap, interpolation='nearest', vmin=min_qos_min_value, vmax=1)
     plt.colorbar(heatmap, label=label)
     # plt.title(label + " Heatmap")
-    ax.set_xlabel('')
-    ax.set_ylabel('')
+    #ax.set_xlabel('')
+    #ax.set_ylabel('')
     ax.set_xticks([])
     ax.set_yticks([])
     ax.invert_yaxis()
@@ -361,9 +368,9 @@ def plot_qos_grid(trace, rsu_config_name, filename='qos_grid.npy', min=True):
 
     ax.set_aspect('equal')
     plt.tight_layout()
-    filename = f"results_{trace}_{rsu_config_name}_{'min' if min else 'avg'}qos_heatmap.png"
-    plt.savefig(filename, format="png", dpi=200)
-    plt.show()
+    filename = f"../figures/results_{trace}_{rsu_config_name}_{'min' if min else 'avg'}qos_heatmap.pdf"
+    plt.savefig(filename, format="pdf")
+    # plt.show()
 
 
 if __name__ == "__main__":
@@ -371,10 +378,12 @@ if __name__ == "__main__":
 
     # eval_strategy_params()
     # run_all_benchmarks()
-    run_benchmarks("creteil-morning", "9-half")
+    # run_benchmarks("creteil-morning", "9-half")
     # investigate_min_qos("creteil-morning", "3-fail-half", ARHCStrategy(**BEST_ARHC_CONFIG))
     # investigate_min_qos("creteil-morning", "3-fail-full", ARHCStrategy(**BEST_ARHC_CONFIG))
     # plot_qos_grid("creteil-morning", "4-half", "results_creteil-morning_4-half_heatmap_qos_min.npy", min=True)
     # plot_qos_grid("creteil-morning", "9-quarter", "results_creteil-morning_9-quarter_heatmap_qos_min.npy", min=True)
     # plot_qos_grid("qos_grid_min.npy", "Minimum QoS", min=True)
     # plot_qos_versus_vehicle_count()
+    run_benchmarks("creteil-morning", "4-half")
+    #run_benchmarks("creteil-morning", "3-fail-full")

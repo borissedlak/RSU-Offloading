@@ -7,10 +7,10 @@ import numpy as np
 from mesa import Agent, Model
 from mesa.space import ContinuousSpace
 
-from poc import VanetTraceLoader as vanetLoader
-from poc.VanetTraceLoader import VehicleTrace
-from poc.base import RsuConfig, distance
-from poc.scheduler import RandomActivationBySortedType
+import VanetTraceLoader as vanetLoader
+from VanetTraceLoader import VehicleTrace
+from base import RsuConfig, distance
+from scheduler import RandomActivationBySortedType
 
 
 class RSAgentStrategy(ABC):

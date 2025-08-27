@@ -1,5 +1,5 @@
-from poc import units as units, VanetTraceLoader as vanetLoader
-from poc.base import RsuConfig
+import units as units, VanetTraceLoader as vanetLoader
+from base import RsuConfig
 
 RSU_RANGE = 70
 RSU_CAPACITY_T4 = 65 * units.TERA
