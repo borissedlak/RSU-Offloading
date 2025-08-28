@@ -211,23 +211,42 @@ def run_benchmarks(scenario, rsu_config):
 
     start = time.time()
 
-    strategies = [
-        (scenario, rsu_config, "ARHC-Oracle", "default", 0, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-01s", "default", 1, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-02s", "default", 2, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-03s", "default", 3, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-04s", "default", 4, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-05s", "default", 5, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-10s", "default", 10, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-15s", "default", 15, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-20s", "default", 20, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-25s", "default", 25, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "ARHC-30s", "default", 30, SEED, None, BEST_ARHC_CONFIG),
-        (scenario, rsu_config, "NearestRSU", "nearest", 1, SEED, 1388, None),
-        (scenario, rsu_config, "EarliestHO", "earliest", 1, SEED, 1540, None),
-        (scenario, rsu_config, "LatestHO", "latest", 1, SEED, 1264, None),
-        (scenario, rsu_config, "RLTD3", "rl", 1, SEED, None , {'input_dimension': 8})
-    ]
+    if rsu_config.startswith("9"):
+        strategies = [
+            # (scenario, rsu_config, "ARHC-Oracle", "default", 0, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-01s", "default", 1, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-02s", "default", 2, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-03s", "default", 3, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-04s", "default", 4, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-05s", "default", 5, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-10s", "default", 10, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-15s", "default", 15, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-20s", "default", 20, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-25s", "default", 25, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-30s", "default", 30, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "NearestRSU", "nearest", 1, SEED, 1388, None),
+            # (scenario, rsu_config, "EarliestHO", "earliest", 1, SEED, 1540, None),
+            # (scenario, rsu_config, "LatestHO", "latest", 1, SEED, 1264, None),
+            (scenario, rsu_config, "RLTD3", "rl", 1, SEED, None , {'input_dimension': 18})
+        ]
+    else:
+        strategies = [
+            # (scenario, rsu_config, "ARHC-Oracle", "default", 0, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-01s", "default", 1, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-02s", "default", 2, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-03s", "default", 3, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-04s", "default", 4, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-05s", "default", 5, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-10s", "default", 10, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-15s", "default", 15, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-20s", "default", 20, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-25s", "default", 25, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "ARHC-30s", "default", 30, SEED, None, BEST_ARHC_CONFIG),
+            # (scenario, rsu_config, "NearestRSU", "nearest", 1, SEED, 1388, None),
+            # (scenario, rsu_config, "EarliestHO", "earliest", 1, SEED, 1540, None),
+            # (scenario, rsu_config, "LatestHO", "latest", 1, SEED, 1264, None),
+            (scenario, rsu_config, "RLTD3", "rl", 1, SEED, None, {'input_dimension': 6})
+        ]
 
     i = 0
     results = []
@@ -385,5 +404,7 @@ if __name__ == "__main__":
     # plot_qos_grid("creteil-morning", "9-quarter", "results_creteil-morning_9-quarter_heatmap_qos_min.npy", min=True)
     # plot_qos_grid("qos_grid_min.npy", "Minimum QoS", min=True)
     # plot_qos_versus_vehicle_count()
-    run_benchmarks("creteil-morning", "4-half")
+    #run_benchmarks("creteil-morning", "9-half")
+    #run_benchmarks("creteil-morning", "9-full")
     #run_benchmarks("creteil-morning", "3-fail-full")
+    run_benchmarks("creteil-morning", "3-fail-half")

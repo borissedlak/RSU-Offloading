@@ -302,7 +302,7 @@ class RLHandoverStrategy(RSAgentStrategy):
             #print("Observation: ", observation)
 
             action_continuous = self.agents[current_station].choose_action(observation)
-            action_discrete = self.discretize_action(action_continuous)
+            action_discrete = self.discretize_action(action_continuous, len(station.neighbors))
             if action_discrete < len(station.neighbors):
                 station.perform_handover(station.neighbors[action_discrete], vehicle)
             last_actions.append(action_discrete)
@@ -321,17 +321,35 @@ class RLHandoverStrategy(RSAgentStrategy):
 
 
 
-    def discretize_action(self, action):
-        if action <= 0.25:
-            return 0 # Offload to first neigbhor
-        elif action <= 0.5:
-            return 1 # Offload to second neigbhor
-        elif action <= 0.75:
-            return 2 # Offload to first neigbhor
-        elif action <= 1:
-            return 3 # Don't offload
+    # def discretize_action(self, action):
+    #     if self.input_dimension == 8:
+    #         if action <= 0.25:
+    #             return 0 # Offload to first neigbhor
+    #         elif action <= 0.5:
+    #             return 1 # Offload to second neigbhor
+    #         elif action <= 0.75:
+    #             return 2 # Offload to first neigbhor
+    #         elif action <= 1:
+    #             return 3 # Don't offload
 
+    def discretize_action(self, action: float, n_neighbors: int) -> int:
+        """
+        Map action in [0,1] to {0..n_neighbors}:
+          0..n_neighbors-1 -> offload to neighbor i
+          n_neighbors      -> don't offload
+        """
+        if n_neighbors <= 0:
+            return 0  # only 'stay' exists
 
+        a = float(action)
+        if a < 0.0: a = 0.0
+        if a > 1.0: a = 1.0
+
+        bins = n_neighbors + 1  # last bin = 'stay'
+        idx = int(a * bins)  # floor
+        if idx >= bins:
+            idx = bins - 1
+        return idx
 
     def after_step(self, model: "VECModel"):
         #new_vehicle_trajectory_suitability = np.zeros(len(self.last_vehicles_ids))
